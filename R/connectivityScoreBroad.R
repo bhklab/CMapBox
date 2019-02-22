@@ -57,7 +57,7 @@
 
 
 
-connectivityScoreBroad <- function(x, y, method=c("fgsea", "gwc", "xsum"), nperm=1e4, nthread=1, gwc.method=c("spearman", "pearson"), ...) {
+connectivityScoreBroad <- function(x, y, method=c("fgsea", "gwc", "xsum", "gwcCmapBox"), nperm=1e4, nthread=1, gwc.method=c("spearman", "pearson"), ...) {
   
   method <- match.arg(method)
   if (class(x) != "matrix") {
@@ -115,6 +115,16 @@ connectivityScoreBroad <- function(x, y, method=c("fgsea", "gwc", "xsum"), nperm
             }
             score <- gwc(x1=x[ii, 1], p1=x[ii, 2], x2=y[ii, 1], p2=y[ii, 2], method.cor=gwc.method, nperm=nperm, ...)
             names(score) <- c("score", "p")
+          },
+          "gwcCmapBox" = {
+            ## intersection between x and y
+            ii <- intersect(rownames(x), rownames(y))
+            if(length(ii) < 10) {
+              stop ("Less than 10 probes/genes in common between x and y")
+            }
+            score <- gwcCmapBox(x1=y[ii, 1], p1=y[ii, 2], x2=x[ii, 1], method.cor=gwc.method, nperm=nperm)
+            names(score) <- c("score", "p")
+            
           },
           "xsum" = {
             ii <- intersect(rownames(x), rownames(y))

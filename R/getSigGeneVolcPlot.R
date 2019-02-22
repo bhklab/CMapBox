@@ -34,7 +34,8 @@ getSigGeneVolcPlot = function(genesEst, genesSymb, genesP, genesId, drugPert, dr
   #drugName = topDrugName
   #gwcMethod = "pearson"
   #droveNegScore = TRUE
-  #drugScoreMeth = "gwc"
+  #drugScoreMeth = "gwcCmapBox"
+  #drugName = topDrugName
   
   if(is.element("calibrate", installed.packages()[,1]) == FALSE)
   {
@@ -73,8 +74,8 @@ getSigGeneVolcPlot = function(genesEst, genesSymb, genesP, genesId, drugPert, dr
     
   }
   
-  if(drugScoreMeth == "gwc" | drugScoreMeth == "fgsea"){
-    
+  if(drugScoreMeth == "gwc"){
+
     truncate.p = 1e-16
     p1 = volcFrame$pvalue
     p1[!is.na(p1) & p1 < truncate.p] <- truncate.p
@@ -87,6 +88,9 @@ getSigGeneVolcPlot = function(genesEst, genesSymb, genesP, genesId, drugPert, dr
     p2 = p2/sum(p2, na.rm = TRUE)
     
     w = p1 + p2
+    
+    if(drugScoreMeth == "gwcCmapBox")
+      w = p2
     
     #for top drug, large neg dataT*pos drugT --> low/drove connectivity score
     #highest rank to highest t-stat lowest rank to lowest t-stat
@@ -126,6 +130,8 @@ getSigGeneVolcPlot = function(genesEst, genesSymb, genesP, genesId, drugPert, dr
       names(sigGenesNeg) = volcFrame$geneSymb
       names(sigGenesPos) = volcFrame$geneSymb
     }
+    #choosing lowest sigGenesNeg and sigGenesPos to represent genes that drove -ve connectivity score
+    #so, for low rank, 
     
     #dataT < 0 --> these are negative genes of data that with drug gave high score
     #high expression in disease group and drug lowers expression of gene
@@ -152,7 +158,13 @@ getSigGeneVolcPlot = function(genesEst, genesSymb, genesP, genesId, drugPert, dr
     posSubsetDat = volcFrame[topPosInds, ]
     posSubsetDrug = drugDat[topPosInds, ]
     
-  }else if(drugScoreMeth == "xsum"){
+  }else if(drugScoreMeth == "xsum" | drugScoreMeth == "fgsea" | drugScoreMeth == "gwcCmapBox"){
+    #does this work for fgsea and gwcCmapBox? have sign only of geneEst and this just takes most + and - drugDat 
+    #genes with correct signs. likely works
+    #fgsea each gene equal impact so free to choose any genes so long as sign is correct
+    #gwcCmapBox considers magnitude so just take most neg or  pos, since free to choose for fgsea
+    #most sig genes in xsum likely same as most sig genes in gwcCmapBox so works as well
+    #put different string in plot, or outside function, depending on method
     
     if(droveNegScore == TRUE){
       direc = FALSE
@@ -203,13 +215,26 @@ getSigGeneVolcPlot = function(genesEst, genesSymb, genesP, genesId, drugPert, dr
   }
 
   #pdf(paste("sig gene queried", genesSigStart,"to",genesSigEnd,"by",genesSigInc,"Volcano Plot of Data Top Drug Genes.pdf"))
-  with(volcFrame, plot(geneEst, -log10(pvalue), pch=20, main=paste("Volcano Plot for the Data with the genes that drove the", direcString, "connectivity score between drug", drugName, "and the data labelled" ), xlim=c(1.2*min(volcFrame$geneEst), 1.2*max(volcFrame$geneEst)), font.axis = 2, cex.lab = 1.3, cex.axis = 1.15))
-  with(negSubsetDat, points(geneEst, -log10(pvalue), pch=20, col=negCol, cex = 2))
-  with(negSubsetDat, textxy(geneEst, -log10(pvalue), labs = geneSymb, cex = 1.5, font = 2, col = "green4"))
-  with(posSubsetDat, points(geneEst, -log10(pvalue), pch=20, col=posCol, cex = 2))
-  with(posSubsetDat, textxy(geneEst, -log10(pvalue), labs = geneSymb, cex = 1.5, font = 2, col = "green4"))
-  legend(bty = "n", 0.8*max(volcFrame$geneEst), 0.97*max(-log10(volcFrame$pvalue)), legend=c("Low in Disease", "High in Disease"), col=c("blue", "red"), pch = 19, cex=1.1, pt.cex = 1.3, x.intersp = .75)
-  #dev.off()
+  #was previously at < 2 probably just an error though
+  if(length(unique(genesEst)) > 2){
+    with(volcFrame, plot(geneEst, -log10(pvalue), pch=20, main=paste("Volcano Plot for the Data with the genes that drove the", direcString, "connectivity score between drug", drugName, "and the data labelled" ), xlim=c(1.2*min(volcFrame$geneEst), 1.2*max(volcFrame$geneEst)), font.axis = 2, cex.lab = 1.3, cex.axis = 1.15))
+    with(negSubsetDat, points(geneEst, -log10(pvalue), pch=20, col=negCol, cex = 2))
+    with(negSubsetDat, textxy(geneEst, -log10(pvalue), labs = geneSymb, cex = 1.5, font = 2, col = "green4"))
+    with(posSubsetDat, points(geneEst, -log10(pvalue), pch=20, col=posCol, cex = 2))
+    with(posSubsetDat, textxy(geneEst, -log10(pvalue), labs = geneSymb, cex = 1.5, font = 2, col = "green4"))
+    legend(bty = "n", 0.8*max(volcFrame$geneEst), 0.97*max(-log10(volcFrame$pvalue)), legend=c("Low in Disease", "High in Disease"), col=c("blue", "red"), pch = 19, cex=1.1, pt.cex = 1.3, x.intersp = .75)
+    #dev.off() 
+  }else{
+    mostInfluentialGenes = c(1:5)
+    colnames(negSubsetDat)[2] = c("gene direction in signature")
+    colnames(posSubsetDat)[2] = c("gene direction in signature")
+    with(negSubsetDat, plot(`gene direction in signature`, mostInfluentialGenes, pch=20, main=paste("Plot for the Data with the genes that drove the", direcString, "connectivity score between drug", drugName, "and the data labelled" ), xlim=c(1.2*min(volcFrame$geneEst), 1.2*max(volcFrame$geneEst)), font.axis = 2, cex.lab = 1.3, cex.axis = 1.15))
+    with(negSubsetDat, points(`gene direction in signature`, mostInfluentialGenes, pch=20, col=negCol, cex = 2))
+    with(negSubsetDat, textxy(`gene direction in signature`, mostInfluentialGenes, labs = geneSymb, cex = 1.5, font = 2, col = "green4"))
+    with(posSubsetDat, points(`gene direction in signature`, mostInfluentialGenes, pch=20, col=posCol, cex = 2))
+    with(posSubsetDat, textxy(`gene direction in signature`, mostInfluentialGenes, labs = geneSymb, cex = 1.5, font = 2, col = "green4"))
+    legend(bty = "n", 0, 3, legend=c("Low in Disease", "High in Disease"), col=c("blue", "red"), pch = 19, cex=1.1, pt.cex = 1.3, x.intersp = .75)
+  }
   
   #pdf(paste("sig gene queried", genesSigStart,"to",genesSigEnd,"by",genesSigInc,"Volcano Plot Top Drug Narrow X.pdf"))
   with(drugDat, plot(estimate, -log10(pvalue), pch=20, main=paste("Drug (",drugName, ") Volcano Plot with the genes that drove the", direcString, "connectivity score bewteen the drug and the data labelled"), xlim=c(1.4*min(drugDat$estimate), 1.4*max(drugDat$estimate)), font.axis = 2, cex.lab = 1.3, cex.axis = 1.15))

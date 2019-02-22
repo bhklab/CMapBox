@@ -27,7 +27,7 @@ makeVolcPlot = function(genesEst, genesSymb, genesP, genesId = NULL, idsOfInt = 
   #genesEst = volcPlotEsts
   #IdsOfInt = gsub("_at", "", rownames(drug.perturbation))
   #genesId = gsub("_at", "", geneDataDf$ensemble)
-  #IdsOfInt = rownames(drugPert)
+  #idsOfInt = rownames(drugPert)
   #genesId = genesId
   
   if(is.element("calibrate", installed.packages()[,1]) == FALSE)

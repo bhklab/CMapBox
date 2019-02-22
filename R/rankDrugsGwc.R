@@ -2,24 +2,24 @@
 #' Function to identify drug candidates.
 #'
 #' This function ranks a list of drugs according to their ability to reverse a phenotype. This is done by first computing scores for the drugs according to one of the various drug repurposing techniques over multiple trials, where each trial 
-#' contains a different number of statistically significant differentially expressed genes between the disease and normal phenotype. At each trial, the drugs are ranked relative to one another in terms of their ability to reverse the disease phenotype. Additionally, 
+#' contains a different number of differentially expressed genes between the disease and normal phenotype. At each trial, the drugs are ranked relative to one another in terms of their ability to reverse the disease phenotype. Additionally, 
 #' drugs are ranked according to how stable they are from trial to trial (as one varies the number of genes). A final score is given to each drug and is determined according to a drugs rank throughout each trial and its change in rank from trial to trial. For N drugs,
 #' a final score of -N would imply the drug was the best at reversing the disease phenotype every single trial and that the drugs rank changed the least from one trial to the next, thus meaning it is both the best drug at reversing the disease phenotype and the most stable drug candidate.
 #' @param geneIds a character vector containing the gene symbols, ensemble IDs, or entrez IDs for the genes to be analyzed
-#' @param geneEsts a numeric vector containing estimates for the difference in expression between the two phenotyes. Note that positive values of this estimate (tstat, logFC, etc) must correspond to higher gene expression in the phenotype one would like to reverse
-#' @param pvals P values from a t-test assessing the diferential expression of the genes between the two phenotypes
+#' @param geneEsts a numeric vector containing estimates or directions (+1 -> up or -1 -> down) for the difference in expression between the two phenotyes. Note that positive values of this estimate (+1, or tstat, logFC, etc) must correspond to higher gene expression in the phenotype one would like to reverse
+#' @param pvals P values from a t-test assessing the diferential expression of the genes between the two phenotypes. If not provided (i.e direction information only for geneEsts) then volcano plots for the data will not be generated and repeat gene IDs will be removed arbitrarily (first ID kept) as opposed to by p value
 #' @param drugPert a drug perturbation signature (object of class PharmacoSig) with rownames that correspond to the ensemble IDs of the genes
 #' @param pharmSet the PharmacoSet used to generate the drug perturbation signature. Supplying this will add additonal info about the drugs in the ranking tables.
-#' @param drugScoreMeth a string specifying which drug repurposing technique to use to score the drugs during each trial. The options for this parameter are currently "gwc", "fgsea", and "xsum". Default is "gwc"
+#' @param drugScoreMeth a string specifying which drug repurposing technique to use to score the drugs during each trial. The options for this parameter are currently "gwc", "gwcCmapBox", "fgsea", and "xsum". Default is "gwcCmapBox"
 #' @param pCut a boolean specifying whether to use pvalues to remove insignificant genes from the CMAP analysis (TRUE) or to remove genes from the CMAP analysis according to their supplied gene estimates (FALSE)
-#' @param cutOff if pCut is TRUE then this value represents the p value threshold used to filter out genes. If pCut is FALSE then this value represents the fraction of genes present in both the data and drug perturbation signature with the top absolute value of gene estimates that will be left in the analysis. cutOff should be between 0 and 1.
-#' @param genesToStart a value between 0 and 1 representing the fraction of significant genes present in the data and drug perturbation signature to use in the first iteration of the CMAP analysis. Recommended to be at least 0.15 to avoid large changes during the early iterations due to having too few genes present.
+#' @param cutOff if pCut is TRUE then this value represents the p value threshold used to filter out genes. If pCut is FALSE then this value represents the fraction of genes present in both the data and drug perturbation signature with the top absolute value of gene estimates that will be left in the analysis. cutOff should be between 0 and 1. If p values ar enot provided, all genes supplied will be used in the analysis
+#' @param genesToStart a value between 0 and 1 representing the fraction of genes present in the data and drug perturbation signature to use in the first iteration of the CMAP analysis. Recommended to be at least 0.40 to avoid large changes during the early iterations due to having too few genes present.
 #' @param numbIters The number of iterations that will occur in the analysis. numbIters will set the rate at which genes are added to the analysis.
-#' @param numbPerms The number of permutations to be used to compute the p value in the gwc function. 
+#' @param numbPerms The number of permutations to be used to compute the p value in the drug repurposing functions. 
 #' @param gwcMethod a character string specifying which method to use when computing correlations in the gwc function. The options are spearman (default) or pearson.
-#' @param volcPlotEsts a numeric vector containing gene estimates to be used for volcano plots, if not provided geneEsts will be used. However, if one desires to use t-stats for geneEsts in the gwc analysis it is recommended that one use another estimate (eg logFC) if volcano plots are desired due to the high correlation between t-stats and p values. 
-#' @param drugEst a boolean specifying whether to use the estimates for each gene of the drug perturbation signature in the gwc calculation (TRUE) or to use the t-stats for each gene in the drug perturbation signatur ein the gwc calculation (FALSE). Default is TRUE
-#' @param inspectResults a boolean specifying whether to display plots that will allow one to check that the correct drugs have been selected base don the data supplied. Default is TURE (show plots)
+#' @param volcPlotEsts a numeric vector containing gene estimates to be used for volcano plots, if not provided geneEsts will be used. If one desires to use t-stats for geneEsts in the gwc analysis it is recommended that one supply the logFC of the genes here if volcano plots are desired. 
+#' @param drugEst a boolean specifying whether to use the estimates for each gene of the drug perturbation signature in the calculations (TRUE) or to use the t-stats for each gene in the drug perturbation signatur ein the calculations (FALSE). Default is TRUE
+#' @param inspectResults a boolean specifying whether to display plots that will allow one to check that the correct drugs have been selected based on the data supplied. Default is TRUE (show plots)
 #' @param showMimic a boolean (default is FALSE) specifying whether to show plots for the drug that upregulates and down regulates the genes that are overexpressed and under expressed in the disease state.
 #' @param mDataType a string specifying the type of molecular data to retrieve molecular profiles for from the pharmacoSet, if one desires to inspect the results of the analysis (inspectResults = TRUE). Default is "rna"
 #' @param extraData a data.frame where each column represents values one would like to inspect to determine if the genes corresponding to these values should be removed if they meet the conditions specified in extraCut and extraDirec. Useful if one would like to remove genes based on logFC or other values. extra data must have the same number of rows as the length of vectors geneIds, geneEsts, and pvals.
@@ -36,9 +36,12 @@
 #' #below line shows how to additionally filter genes based on logFC
 #' #drugResults = rankDrugsGwc(geneIds = geneDataGwc$ensembl_id, geneEsts = geneDataGwc$t, pvals = geneDataGwc$P.Value, drugPert = drugPertEx, pharmSet = psetSub, volcPlotEsts = geneDataGwc$logFC, extraData = cbind(abs(geneDataGwc$logFC)), extraCut = c(0.5), extraDirec = c(TRUE))
 
-rankDrugsGwc = function(geneIds, geneEsts, pvals, drugPert = NULL, pharmSet = NULL, drugScoreMeth = "gwc", pCut = TRUE, cutOff = 0.05, genesToStart = 0.20, numbIters = 10, gwcMethod = "spearman", numbPerms = 1000, volcPlotEsts = NA, drugEst = TRUE, inspectResults = TRUE, showMimic = FALSE, mDataType = "rna", extraData = NA, extraCut = NA, extraDirec = NA)
+rankDrugsGwc = function(geneIds, geneEsts, pvals = NULL, drugPert = NULL, pharmSet = NULL, drugScoreMeth = "gwcCmapBox", pCut = TRUE, cutOff = 0.05, genesToStart = 0.20, numbIters = 10, gwcMethod = "spearman", numbPerms = 1000, volcPlotEsts = NA, drugEst = TRUE, inspectResults = TRUE, showMimic = FALSE, mDataType = "rna", extraData = NA, extraCut = NA, extraDirec = NA)
 {
   #########################################Section 1: Data Preperation#######################################################
+  pvalsOrig = pvals
+  if(is.null(pvals))
+    pvals = sample(1:length(geneIds), length(geneIds))/length(geneIds)
   
   #convert geneEsts and pvals in case they are factors or character vectors
   geneEsts = as.numeric(as.character(geneEsts))
@@ -46,6 +49,9 @@ rankDrugsGwc = function(geneIds, geneEsts, pvals, drugPert = NULL, pharmSet = NU
   
   geneDataDf = cleanData(geneIds, geneEsts, pvals, forRankAndPlot = TRUE)
 
+  if(is.null(pvalsOrig) & nrow(geneDataDf) != length(geneIds))
+    warning("repeat IDs were removed arbitrarily since p values were not supplied.")
+  
   #pharmacoGx doesnt appear to install if needed, below installs it if it isn't been before
   if(is.element("PharmacoGx", installed.packages()[,1]) == FALSE)
   {
@@ -98,21 +104,26 @@ rankDrugsGwc = function(geneIds, geneEsts, pvals, drugPert = NULL, pharmSet = NU
       cutOff = cutOff/100
     
     warning("The cutOff value supplied was greater than 1 and has been reduced to a fraction between 0 and 1")
-    if(pCut == TRUE)
+    if(pCut == TRUE & !is.null(pvalsOrig))
       print(paste("If it was intended that genes with a p value less than", cutOff, "should be kept, then the analysis will be conducted as intended"))
-    if(pCut == FALSE)
+    #2 gene ests implies only direction is being used
+    if(pCut == FALSE & length(unique(geneEsts)) > 2)
       print(paste("If it was intended that genes with an abs(estimate) in the top", cutOff*100, " percent should be kept, then the analysis will be conducted as intended"))
   }
   
-  if(pCut == TRUE)
+  sigGenes = c(1:nrow(geneDataDf))
+  if(pCut == TRUE & !is.null(pvalsOrig))
   {
     sigGenes = which(genesCmapAll$pvalue < cutOff)
     print(paste(length(sigGenes), "significant genes/genes with p <", cutOff,"in the analysis"))
   }else{
-    estOrd = order(abs(genesCmapAll$estimate), decreasing = TRUE)
-    numKeep = floor(length(estOrd)*cutOff)
-    sigGenes = estOrd[1:numKeep]
-    print(paste(cutOff,"percent of genes with the top estimate will be used in the analysis for a total of", length(sigGenes), "genes"))
+    if(length(unique(geneEsts)) > 2)
+    {
+      estOrd = order(abs(genesCmapAll$estimate), decreasing = TRUE)
+      numKeep = floor(length(estOrd)*cutOff)
+      sigGenes = estOrd[1:numKeep]
+      print(paste(cutOff,"percent of genes with the top estimate will be used in the analysis for a total of", length(sigGenes), "genes"))
+    }
   }
   
   genesCmap = genesCmapAll[sigGenes,]
@@ -146,8 +157,8 @@ rankDrugsGwc = function(geneIds, geneEsts, pvals, drugPert = NULL, pharmSet = NU
     print(paste(genesToStart*100, "percent of the genes will be used in the first iteration of the analysis"))
     if(genesToStart == 1)
     {
-      warning("As genesToSart was equal to 1 and would have crashed the program, it has been changed to 0.20")
-      genesToStart = 0.20
+      warning("As genesToSart was equal to 1 and would have crashed the program, it has been changed to 0.40")
+      genesToStart = 0.40
     }
   }
   
@@ -352,7 +363,7 @@ rankDrugsGwc = function(geneIds, geneEsts, pvals, drugPert = NULL, pharmSet = NU
   pCol = c()
   fdrCol = c()
   csCol = c()
-  for(i in 1:nrow(pFrame))
+  for(i in 1:nrow(csFrame))
   {
     pCol[i] = paste(pFrame[i, ], collapse = ", ")
     fdrCol[i] = paste(fdrFrame[i, ], collapse = ", ")
@@ -393,10 +404,14 @@ rankDrugsGwc = function(geneIds, geneEsts, pvals, drugPert = NULL, pharmSet = NU
     #plot(sizeVec, rankVsSize, main = paste("Rank as a Function of Query Size for the Top Drug", topDrug), xlab = "Query Size (number of genes in the analysis)", ylab = "Rank (1 implies best at reversing disease phenotype)")
     #plot(1:(numbIters-1), changeVsSize, main = paste("Change in Rank from Query to Query for the Top Drug", topDrug), xlab = "Query Number", ylab = "abs(Rank of Mean Rank Change) Between Queries")
     
+    direcOnly = FALSE
+    if(is.null(pvalsOrig) | length(unique(geneEsts)) == 2)
+      direcOnly = TRUE
+    
     topDrug = rownames(cmapResults)[1]
     drugRankPlots(cmapResults, topDrug)
     
-    if(is.na(volcPlotEsts[1])){
+    if(is.na(volcPlotEsts[1]) | is.null(pvalsOrig)){
       volcPlotEsts = geneDataDf$geneEsts
     }else{
       volcPlotEsts = volcPlotEsts[as.numeric(rownames(geneDataDf))]
@@ -404,7 +419,7 @@ rankDrugsGwc = function(geneIds, geneEsts, pvals, drugPert = NULL, pharmSet = NU
 
     idsUsed = rownames(genesCmap)
     idsUsed = which(geneDataDf$ensemble %in% idsUsed)
-    inspectDrugResults(volcPlotEsts[idsUsed], geneDataDf$symbol[idsUsed], geneDataDf$pvals[idsUsed], geneDataDf$ensemble[idsUsed], drugPert, pharmSet, drugScoreMeth, mDataType = mDataType, cmapResults, gwcMethod, drugEst, drugVolcPlot = FALSE, showMimic = showMimic)
+    inspectDrugResults(volcPlotEsts[idsUsed], geneDataDf$symbol[idsUsed], geneDataDf$pvals[idsUsed], geneDataDf$ensemble[idsUsed], drugPert, pharmSet, drugScoreMeth, mDataType = mDataType, cmapResults, gwcMethod, drugEst, direcOnly, drugVolcPlot = FALSE, showMimic = showMimic)
   }
   
   #add clinical trial info if available
@@ -433,6 +448,7 @@ rankDrugsGwc = function(geneIds, geneEsts, pvals, drugPert = NULL, pharmSet = NU
     cmapResults = cbind(cmapResults, trialInfoVec, trialStatusVec)
     colnames(cmapResults)[(ncol(cmapResults) - 1):(ncol(cmapResults))] = c("Drug Clinical Trials", "Trial Outcomes")
   }
+  #double check that each method returns connectivity scores between 0 and 1!
   
   return(cmapResults)
 }
@@ -452,64 +468,3 @@ rankDrugsGwc = function(geneIds, geneEsts, pvals, drugPert = NULL, pharmSet = NU
 #setwd("..")
 #install("gwcCmap")
 #library(gwcCMap)
-
-#setwd("C:\\Users\\micha\\Documents\\PMH Research\\Code from Neel Project")
-#geneData = read.table("breast_normal_vs_dtp-all_cell_lines.txt",sep="\t", header=TRUE)
-#geneIds = as.character(geneData$symbol)
-#geneIds = as.character(geneData$ensembl_id)
-#geneEsts = geneData$t
-#pvals = geneData$P.Value
-#volcPlotEsts = geneData$logFC
-#extraData = abs(geneData$logFC)
-#extraCut = 0.5
-#extraDirec = TRUE
-
-#setwd("C:\\Users\\micha\\Documents\\PMH Research\\GWC CMAP Package")
-#load("cmap_sig_rna.RData")
-#drugPert = drug.perturbation
-
-#setwd("C:\\Users\\micha\\Documents\\PMH Research\\GWC CMAP Package")
-#load("CMAP.RData")
-#pharmSet = CMAP
-#pCut=TRUE
-#cutOff = .05
-#genesToStart = 0.20
-#numbIters = 10
-#numbPerms = 1000
-#gwcMethod = "spearman"
-#drugEst = TRUE
-#inspectResults = TRUE
-#showMimic = TRUE
-#drugScoreMeth = "xsum"
-#mDataType = "rna"
-
-#setwd("C:\\Users\\micha\\Documents\\PMH Research\\GWC CMAP Package")
-#load("L1000_compounds.RData")
-#pharmSet = L1000_compounds
-#load("all_drugs.RData")
-#drugPert = lincs_small.drugPerturbation
-
-#drugList = rankDrugsGwc(geneIds, geneEsts, pvals, drugPert = drugPert[, 1:100, ], pharmSet = pharmSet, pCut = TRUE, cutOff = 0.05, genesToStart = 0.20, numbIters = 10, gwcMethod = "spearman", numbPerms = 1000, volcPlotEsts = volcPlotEsts, drugEst = TRUE, inspectResults = TRUE, showMimic = FALSE, mDataType = "rna")
-  
-
-#geneIds = paramList[[2]][[i]]
-#geneEsts= paramList[[3]][[i]]
-#pvals= paramList[[4]][[i]]
-#drugPert = paramList[[5]][[i]]
-#pharmSet = paramList[[6]][[i]]
-#drugScoreMeth = paramList[[7]][[i]]
-#pCut  = paramList[[8]][[i]]
-#cutOff = paramList[[9]][[i]]
-#genesToStart = paramList[[10]][[i]]
-#numbIters = paramList[[11]][[i]]
-#gwcMethod = paramList[[12]][[i]]
-#numbPerms= paramList[[13]][[i]]
-#volcPlotEsts = paramList[[14]][[i]]
-#drugEst = paramList[[15]][[i]]
-#inspectResults = FALSE
-#showMimic = FALSE
-#mDataType = "rna" 
-#extraData = paramList[[16]][[i]]
-#extraCut = paramList[[17]][[i]]
-#extraDirec = paramList[[18]][[i]]
-

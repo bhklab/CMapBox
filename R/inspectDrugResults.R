@@ -12,6 +12,7 @@
 #' @param drugResults a drug rank data frame (such as that returned by rankDrugsGwc) ordered by most negative to most positive scored drugs with the rownames containing the drug names
 #' @param gwcMethod a character string specifying which method was used when computing correlations in the gwc function. The options are spearman or pearson.
 #' @param drugEst a boolean specifying whether the estimates for each gene of the drug perturbation signature were used in the gwc calculation (TRUE) or if the t-stats for each gene in the drug perturbation signature were used in the gwc calculation (FALSE).
+#' @param direcOnly a boolean specifying whether onlt the directions of the genes and not their estimates were used in a rankDrugsGwc analysis. FALSE by default, but if true volcano plots for the data will not be generated when inspecting the validity of the results
 #' @param drugVolcPlot a boolean (default is FALSE) specifying whether to generate a volcano plot for the top and bottom 5 genes (by estimate) in the drug that were present in the data supplied
 #' @param topDrugName the name of the drug that one would like to check reverses the disease phenotype. If not provided, the best candidate according to the drugResults frame will be selected.
 #' @param botDrugName the name of the drug that one would like to check enhances the disease phenotype. If not provided, the best candidate according to the drugResults frame will be selected.
@@ -26,7 +27,7 @@
 #' inspectDrugResults(genesEst = geneDataClean$geneEsts, genesSymb = geneDataClean$symbol, genesP = geneDataClean$pvals, genesId = geneDataClean$ensemble, drugPert = drugPertEx, pharmSet = psetSub, mDataType = "rna", drugResults = drugResults, gwcMethod = "pearson", drugEst = TRUE)
 
 
-inspectDrugResults = function(genesEst, genesSymb, genesP, genesId, drugPert, pharmSet, drugScoreMeth, mDataType, drugResults, gwcMethod, drugEst, drugVolcPlot = FALSE, topDrugName = NULL, botDrugName = NULL, showMimic = FALSE)
+inspectDrugResults = function(genesEst, genesSymb, genesP, genesId, drugPert, pharmSet, drugScoreMeth, mDataType, drugResults, gwcMethod, drugEst, direcOnly = TRUE, drugVolcPlot = FALSE, topDrugName = NULL, botDrugName = NULL, showMimic = FALSE)
 {
   # inspectDrugResults(volcPlotEsts, geneDataDf$symbol, geneDataDf$pvals, geneDataDf$ensemble, drugPert, pharmSet, mDataType = mDataType, cmapResults, gwcMethod, drugEst, drugVolcPlot = FALSE, showMimic = showMimic)
   #genesEst = volcPlotEsts[idsUsed]
@@ -35,17 +36,19 @@ inspectDrugResults = function(genesEst, genesSymb, genesP, genesId, drugPert, ph
   #genesId = geneDataDf$ensemble[idsUsed]
   #drugResults = cmapResults
   
-  makeVolcPlot(genesEst, genesSymb, genesP, genesId, rownames(drugPert))
+  if(direcOnly == FALSE)
+    makeVolcPlot(genesEst, genesSymb, genesP, genesId, rownames(drugPert))
   
   if(is.null(topDrugName))
     topDrugName = rownames(drugResults)[1]
+  #below not currently working for fgsea and gwcCmapBox
   driveGenesNegScore = getSigGeneVolcPlot(genesEst, genesSymb, genesP, genesId, drugPert, topDrugName, drugScoreMeth, gwcMethod, droveNegScore = TRUE, drugEst, drugVolcPlot = FALSE, supressPlot = FALSE)
   if(drugScoreMeth == "gwc" | drugScoreMeth == "fgsea")
-    print(paste("For the volcano plots that show the genes that drove the negative connectivity score, blue and red labelled genes should cross 0 when going from the data volcano plot to drug", topDrugName,"volcano plot and the blue dots in the volcano plot for the data should be genes that have lower expression in the disease state relative to the normal state. If the prior statements are not true then these are not the drugs you are looking for. You likely need to switch the sign of the supplied geneEsts vector."))
+    print(paste("For the plots that show the genes that drove the negative connectivity score, blue and red labelled genes should cross 0 when going from the data plot to drug", topDrugName,"volcano plot and the blue dots in the plot for the data should be genes that have lower expression in the disease state relative to the normal state. If the prior statements are not true then these are not the drugs you are looking for. You likely need to switch the sign of the supplied geneEsts vector."))
   
   seeDrugImpactGenes(drugPert, pharmSet, mDataType, topDrugName, driveGenesNegScore)
   if(drugScoreMeth == "gwc" | drugScoreMeth == "fgsea")
-    print(paste("If the negative gene estimate genes from the data (blue dots in data volcano plots) that drove the negative connectivity score have not had their expression levels increase (Percent Change > 0 and usually blue boxes) on the heatmaps for drug", topDrugName, "then this drug does not appear to increase the expression of genes that had low expression in the disease phenotype relative to the normal phenotype and this is not the drug you are looking for (blue dots in volcano plots should be blue in the heatmap for the drug that reverses the phenotype). "))
+    print(paste("If the negative gene estimate genes from the data (blue dots in data plots) that drove the negative connectivity score have not had their expression levels increase (Percent Change > 0 and usually blue boxes) on the heatmaps for drug", topDrugName, "then this drug does not appear to increase the expression of genes that had low expression in the disease phenotype relative to the normal phenotype and this is not the drug you are looking for (blue dots in plots should be blue in the heatmap for the drug that reverses the phenotype). "))
     
   if(showMimic == TRUE)
   {

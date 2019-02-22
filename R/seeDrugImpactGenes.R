@@ -22,6 +22,9 @@ seeDrugImpactGenes = function(drugPert, pharmSet, mDataType, drugName, genesOfIn
   #drugName = "BRD-K19687926"
   #genesOfInt = c("MCOLN1" ,"JUN"  ,  "CERK"  , "IGFBP3", "TIMP2" , "E2F2" ,  "KIF14" , "PLK1",   "DCK" ,   "UBE2C" )
   
+  #drugName = topDrugName
+  #genesOfInt = driveGenesNegScore
+  
   drugCol = which(colnames(drugPert) == drugName)
   drugDat = as.data.frame(drugPert[,drugCol ,])
   geneEns = rownames(drugPert)
