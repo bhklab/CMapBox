@@ -32,17 +32,9 @@
 #' data("geneDataGwc")
 #' data("drugPertEx")
 #' data("psetSub")
-#' drugResults = rankDrugsGwc(geneIds=geneDataGwc$ensembl_id, geneEsts=geneDataGwc$t, 
-#'                            pvals = geneDataGwc$P.Value, drugPert = drugPertEx,
-#'                            pharmSet=psetSub, drugScoreMeth = "gwc", 
-#'                            volcPlotEsts = geneDataGwc$logFC)
-#'                            
+#' drugResults = rankDrugsGwc(geneIds = geneDataGwc$ensembl_id, geneEsts = geneDataGwc$t, pvals = geneDataGwc$P.Value, drugPert = drugPertEx, pharmSet = psetSub, drugScoreMeth = "gwc", volcPlotEsts = geneDataGwc$logFC)
 #' #below line shows how to additionally filter genes based on logFC
-#' drugResults = rankDrugsGwc(geneIds=geneDataGwc$ensembl_id, geneEsts = geneDataGwc$t, 
-#'                             pvals=geneDataGwc$P.Value, drugPert=drugPertEx, 
-#'                             pharmSet=psetSub, volcPlotEsts=geneDataGwc$logFC, 
-#'                             extraData = cbind(abs(geneDataGwc$logFC)), 
-#'                             extraCut = c(0.5), extraDirec = c(TRUE))
+#' #drugResults = rankDrugsGwc(geneIds = geneDataGwc$ensembl_id, geneEsts = geneDataGwc$t, pvals = geneDataGwc$P.Value, drugPert = drugPertEx, pharmSet = psetSub, volcPlotEsts = geneDataGwc$logFC, extraData = cbind(abs(geneDataGwc$logFC)), extraCut = c(0.5), extraDirec = c(TRUE))
 
 rankDrugsGwc = function(geneIds, geneEsts, pvals = NULL, drugPert = NULL, pharmSet = NULL, drugScoreMeth = "gwcCmapBox", pCut = TRUE, cutOff = 0.05, genesToStart = 0.20, numbIters = 10, gwcMethod = "spearman", numbPerms = 1000, volcPlotEsts = NA, drugEst = TRUE, inspectResults = TRUE, showMimic = FALSE, mDataType = "rna", extraData = NA, extraCut = NA, extraDirec = NA)
 {
@@ -72,8 +64,7 @@ rankDrugsGwc = function(geneIds, geneEsts, pvals = NULL, drugPert = NULL, pharmS
     print("No drug data was supplied. The drug data present in CMAP will be downloaded and used in the analysis")
     #should just download perturbation signature directly if its available on the website or supply it with the package
     PharmacoGx::downloadPSet("CMAP")
-    print("Computing perturbation signature from CMAP data.....this may take half a day, 
-          considering finding and supplying a precomputed pset")
+    print("Computing perturbation signature from CMAP data.....this may take half a day, considering finding and supplying a precomputed pset")
     drugPert = drugPerturbationSig(CMAP, mDataType="rna")
     print("Perturbation signature computation finished")
   }
@@ -418,7 +409,16 @@ rankDrugsGwc = function(geneIds, geneEsts, pvals = NULL, drugPert = NULL, pharmS
       direcOnly = TRUE
     
     topDrug = rownames(cmapResults)[1]
-    drugRankPlots(cmapResults, topDrug)
+    #topDrug = drugName
+    rankFrameInd = which(rownames(rankFrame) == topDrug)
+    rankChangeInd = which(rownames(rankChangeFrame) == topDrug)
+    rankVsSize = rankFrame[rankFrameInd, ]
+    changeVsSize = rankChangeFrameOrig[rankChangeInd,]
+    
+    plot(1:length(rankVsSize), rankVsSize, main = paste("Rank as a Function of the Iterations for", topDrug), xlab = "Query Number", ylab = "Rank (1 implies best at reversing disease phenotype)")
+    plot(1:length(changeVsSize), changeVsSize, main = paste("Change in Rank from Query to Query for", topDrug), xlab = "Query Number", ylab = "abs(Rank of Mean Rank Change) Between Queries")
+    
+    #drugRankPlots(cmapResults, topDrug)
     
     if(is.na(volcPlotEsts[1]) | is.null(pvalsOrig)){
       volcPlotEsts = geneDataDf$geneEsts
