@@ -120,9 +120,13 @@ drugRankPlots = function(drugResults, drugName = NULL)
     fdrCol[i] = paste(fdrFrame[i, ], collapse = ", ")
     csCol[i] = paste(csFrame[i, ], collapse = ", ")
   }
-  #although best final scores for reversing the phenotypes are large negative ranks, paste drugRankMeansPos and drugRankMeansOrig to the table
-  #as they are easiest to interpret. A value of 1 on these lists means the drug had the largest negative connectivity score each iteration (rankMeans)
-  #and its rank changed the least from iteration to iteration relative to all the other drugs (rankChange)
+  
+  #although best final scores for reversing the phenotypes are large negative ranks, 
+  #paste drugRankMeansPos and drugRankMeansOrig to the table
+  #as they are easiest to interpret. A value of 1 on these lists means the drug 
+  #had the largest negative connectivity score each iteration (rankMeans)
+  #and its rank changed the least from iteration to iteration relative to all 
+  #the other drugs (rankChange)
   cmapResults = cbind(sigFinalScores, drugRankMeansPos, drugRankChangeMeansOrig, csCol, pCol, fdrCol)
   #sorting = order(cmapResults[,"sigFinalScores"], decreasing = FALSE)
   #cmapResults = cmapResults[sorting,]

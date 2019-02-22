@@ -32,9 +32,17 @@
 #' data("geneDataGwc")
 #' data("drugPertEx")
 #' data("psetSub")
-#' drugResults = rankDrugsGwc(geneIds = geneDataGwc$ensembl_id, geneEsts = geneDataGwc$t, pvals = geneDataGwc$P.Value, drugPert = drugPertEx, pharmSet = psetSub, drugScoreMeth = "gwc", volcPlotEsts = geneDataGwc$logFC)
+#' drugResults = rankDrugsGwc(geneIds=geneDataGwc$ensembl_id, geneEsts=geneDataGwc$t, 
+#'                            pvals = geneDataGwc$P.Value, drugPert = drugPertEx,
+#'                            pharmSet=psetSub, drugScoreMeth = "gwc", 
+#'                            volcPlotEsts = geneDataGwc$logFC)
+#'                            
 #' #below line shows how to additionally filter genes based on logFC
-#' #drugResults = rankDrugsGwc(geneIds = geneDataGwc$ensembl_id, geneEsts = geneDataGwc$t, pvals = geneDataGwc$P.Value, drugPert = drugPertEx, pharmSet = psetSub, volcPlotEsts = geneDataGwc$logFC, extraData = cbind(abs(geneDataGwc$logFC)), extraCut = c(0.5), extraDirec = c(TRUE))
+#' drugResults = rankDrugsGwc(geneIds=geneDataGwc$ensembl_id, geneEsts = geneDataGwc$t, 
+#'                             pvals=geneDataGwc$P.Value, drugPert=drugPertEx, 
+#'                             pharmSet=psetSub, volcPlotEsts=geneDataGwc$logFC, 
+#'                             extraData = cbind(abs(geneDataGwc$logFC)), 
+#'                             extraCut = c(0.5), extraDirec = c(TRUE))
 
 rankDrugsGwc = function(geneIds, geneEsts, pvals = NULL, drugPert = NULL, pharmSet = NULL, drugScoreMeth = "gwcCmapBox", pCut = TRUE, cutOff = 0.05, genesToStart = 0.20, numbIters = 10, gwcMethod = "spearman", numbPerms = 1000, volcPlotEsts = NA, drugEst = TRUE, inspectResults = TRUE, showMimic = FALSE, mDataType = "rna", extraData = NA, extraCut = NA, extraDirec = NA)
 {
@@ -64,7 +72,8 @@ rankDrugsGwc = function(geneIds, geneEsts, pvals = NULL, drugPert = NULL, pharmS
     print("No drug data was supplied. The drug data present in CMAP will be downloaded and used in the analysis")
     #should just download perturbation signature directly if its available on the website or supply it with the package
     PharmacoGx::downloadPSet("CMAP")
-    print("Computing perturbation signature from CMAP data.....this may take half a day, considering finding and supplying a precomputed pset")
+    print("Computing perturbation signature from CMAP data.....this may take half a day, 
+          considering finding and supplying a precomputed pset")
     drugPert = drugPerturbationSig(CMAP, mDataType="rna")
     print("Perturbation signature computation finished")
   }
