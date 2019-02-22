@@ -1,0 +1,75 @@
+%\VignetteEngine{knitr::knitr}
+%\VignetteIndexEntry{The CMapBox User's Guide}
+\documentclass{article}
+
+<<style, eval=TRUE, echo=FALSE, results="asis">>=
+BiocStyle::latex()
+@
+
+\title{The CMapBox User's Guide}
+\author[1,2]{Michael Zon}
+\author[1,2]{Arvind Mer}
+\author[1,2,3,4,5]{Benjamin Haibe-Kains}
+\affil[1]{Princess Margaret Cancer Centre, University Health Network, Toronto, Canada}
+\affil[2]{Department of Medical Biophysics, University of Toronto, Toronto, Canada}
+\affil[3]{Department of Computer Science, University of Toronto, Toronto, Canada}
+\affil[4]{Vector Institute, Toronto, Ontario, Canada}
+\affil[5]{Ontario Institute for Cancer Research, Toronto, Ontario, Canada}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+<<options, results='hide', message=FALSE, eval=TRUE, echo=FALSE>>=
+library(CMapBox)
+@
+
+\section{Introduction}
+
+The CMapBox package provides efficient and powerful functions for pharmacogenomic data analysis...
+
+\section{Installation and Settings}
+
+CMapBox requires that several packages be installed. All dependencies are available from CRAN or Bioconductor:
+
+<<get_lib, results='hide', message=FALSE, eval=FALSE>>=
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+BiocManager::install("CMapBox", version = "3.8")
+@
+
+The package can also be installed directly form GitHub using devtools:
+
+<<githubInst, results='hide', message=FALSE, eval=FALSE>>=
+#install devtools if required
+install.packages("devtools")
+
+#install Xeva as:
+devtools::install_github("bhklab/CMapBox")
+@
+
+
+Load Xeva into your current workspace:
+<<l, results='hide', message=FALSE, eval=TRUE>>=
+library(CMapBox)
+@
+
+<<biobase, results='hide', message=FALSE, eval=TRUE, echo=FALSE>>=
+suppressMessages(library(Biobase))
+@
+
+Load the dataset you wish to analyze:
+<<l2>>=
+#data(brca)
+#print(brca)
+@
+
+\newpage
+\section{SessionInfo}
+<<sess,>>=
+sessionInfo()
+@
+\end{document}
