@@ -32,7 +32,9 @@
 #' data("geneDataGwc")
 #' data("drugPertEx")
 #' data("psetSub")
-#' drugResults = rankDrugsGwc(geneIds = geneDataGwc$ensembl_id, geneEsts = geneDataGwc$t, pvals = geneDataGwc$P.Value, drugPert = drugPertEx, pharmSet = psetSub, drugScoreMeth = "gwc", volcPlotEsts = geneDataGwc$logFC)
+#' drugResults = rankDrugsGwc(geneIds=geneDataGwc$ensembl_id, geneEsts=geneDataGwc$t, 
+#'                            pvals=geneDataGwc$P.Value, drugPert=drugPertEx, 
+#'                            pharmSet=psetSub, drugScoreMeth="gwc", volcPlotEsts = geneDataGwc$logFC)
 #' #below line shows how to additionally filter genes based on logFC
 #' #drugResults = rankDrugsGwc(geneIds = geneDataGwc$ensembl_id, geneEsts = geneDataGwc$t, pvals = geneDataGwc$P.Value, drugPert = drugPertEx, pharmSet = psetSub, volcPlotEsts = geneDataGwc$logFC, extraData = cbind(abs(geneDataGwc$logFC)), extraCut = c(0.5), extraDirec = c(TRUE))
 
@@ -41,8 +43,9 @@ rankDrugsGwc = function(geneIds, geneEsts, pvals = NULL, drugPert = NULL, pharmS
   #########################################Section 1: Data Preperation#######################################################
   pvalsOrig = pvals
   if(is.null(pvals))
+  {
     pvals = sample(1:length(geneIds), length(geneIds))/length(geneIds)
-  
+  }
   #convert geneEsts and pvals in case they are factors or character vectors
   geneEsts = as.numeric(as.character(geneEsts))
   pvals = as.numeric(as.character(pvals))
@@ -50,8 +53,9 @@ rankDrugsGwc = function(geneIds, geneEsts, pvals = NULL, drugPert = NULL, pharmS
   geneDataDf = cleanData(geneIds, geneEsts, pvals, forRankAndPlot = TRUE)
 
   if(is.null(pvalsOrig) & nrow(geneDataDf) != length(geneIds))
+  {
     warning("repeat IDs were removed arbitrarily since p values were not supplied.")
-  
+  }
   #pharmacoGx doesnt appear to install if needed, below installs it if it isn't been before
   if(is.element("PharmacoGx", installed.packages()[,1]) == FALSE)
   {
@@ -64,19 +68,25 @@ rankDrugsGwc = function(geneIds, geneEsts, pvals = NULL, drugPert = NULL, pharmS
     print("No drug data was supplied. The drug data present in CMAP will be downloaded and used in the analysis")
     #should just download perturbation signature directly if its available on the website or supply it with the package
     PharmacoGx::downloadPSet("CMAP")
-    print("Computing perturbation signature from CMAP data.....this may take half a day, considering finding and supplying a precomputed pset")
+    print("Computing perturbation signature from CMAP data.....this may take half a day, 
+          considering finding and supplying a precomputed pset")
     drugPert = drugPerturbationSig(CMAP, mDataType="rna")
     print("Perturbation signature computation finished")
   }
   
   #deal with cmap rownames
   if(grepl("_at", rownames(drugPert)[1]))
+  {
     rownames(drugPert) = gsub("_at_", "", paste0(rownames(drugPert), "_"))
     #geneDataDf$ensemble = paste0(geneDataDf$ensemble, "_at")
+  }
   
   #deal with L1000 dataset that is ordered different from cmap data and has entrez ids instead of ensemble ids
   if(dim(drugPert)[3] > dim(drugPert)[2])
+  {
     drugPert = aperm(drugPert, c(1,3,2))
+  }
+  
   if(grepl("geneid.", rownames(drugPert)[1]) == TRUE)
   {
     geneEntrezs = gsub("geneid.", "", rownames(drugPert))
@@ -88,7 +98,9 @@ rankDrugsGwc = function(geneIds, geneEsts, pvals = NULL, drugPert = NULL, pharmS
   #remove genes that are not present in both the data and drugPert
   presentVec = c()
   for(i in 1:nrow(drugPert))
+  {
     presentVec = c(presentVec, which(geneDataDf$ensemble == rownames(drugPert)[i]))
+  }
   print(paste(length(presentVec),"of the", nrow(geneDataDf),"genes from the data are present in the drug perturbation signature and will be used in the analysis"))
   geneDataDf = geneDataDf[presentVec, ]
   
