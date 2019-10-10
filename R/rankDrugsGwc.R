@@ -96,6 +96,7 @@ rankDrugsGwc = function(geneIds, geneEsts, pvals = NULL, drugPert = NULL,
   
   #remove genes that are not present in both the data and drugPert
   presentVec = c()
+  
   for(i in 1:nrow(drugPert))
   {
     presentVec = c(presentVec, which(geneDataDf$ensemble == rownames(drugPert)[i]))
