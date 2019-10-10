@@ -21,24 +21,10 @@
 runFgsea = function(pathways, geneStats, geneIds, nperm = 50000, numCores = 1)
 {
   names(geneStats) = geneIds
-  # if(is.element("GSA", installed.packages()[,1]) == FALSE)
-  #   install.packages("GSA")
-  # library(GSA)
-  # if(is.element("piano", installed.packages()[,1]) == FALSE)
-  #   install.packages("piano")
-  # library(piano)
-  # if(is.element("parallel", installed.packages()[,1]) == FALSE)
-  #   install.packages("parallel")
-  # library(parallel)
-  # if(is.element("fgsea", installed.packages()[,1]) == FALSE)
-  #   install.packages("fgsea")
-  # library(fgsea)
+
+  if((detectCores() - 1) > 0) { coresNum = detectCores() - 1 }
   
-  #numCores = 1
-  if((detectCores() - 1) > 0)
-    coresNum = detectCores() - 1
-  
-  pathwaysObj = pathways
+  pathwaysObj = pathways ##this need to be changed to use gmt file
   if(pathwaysObj[1] == "all")
   {
     data("aGwcPack")

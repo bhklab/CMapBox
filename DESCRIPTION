@@ -9,6 +9,7 @@ License: What license is it under?
 Encoding: UTF-8
 Imports:
     Biobase,
+    PharmacoGx,
     org.Hs.eg.db,
     GSA,
     piano,
