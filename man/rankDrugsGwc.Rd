@@ -4,43 +4,44 @@
 \alias{rankDrugsGwc}
 \title{Function to identify drug candidates.}
 \usage{
-rankDrugsGwc(geneIds, geneEsts, pvals, drugPert = NULL, pharmSet = NULL,
-  drugScoreMeth = "gwc", pCut = TRUE, cutOff = 0.05, genesToStart = 0.2,
-  numbIters = 10, gwcMethod = "spearman", numbPerms = 1000,
-  volcPlotEsts = NA, drugEst = TRUE, inspectResults = TRUE,
-  showMimic = FALSE, mDataType = "rna", extraData = NA, extraCut = NA,
-  extraDirec = NA)
+rankDrugsGwc(geneIds, geneEsts, drugPert, pharmSet = NULL,
+  pvals = NULL, drugScoreMeth = "gwcCmapBox", pCut = TRUE,
+  cutOff = 0.05, genesToStart = 0.2, numbIters = 10,
+  gwcMethod = "spearman", numbPerms = 1000, volcPlotEsts = NA,
+  drugEst = TRUE, inspectResults = FALSE, showMimic = FALSE,
+  mDataType = "rna", extraData = NA, extraCut = NA,
+  extraDirec = NA, drugNameVec = NULL)
 }
 \arguments{
 \item{geneIds}{a character vector containing the gene symbols, ensemble IDs, or entrez IDs for the genes to be analyzed}
 
-\item{geneEsts}{a numeric vector containing estimates for the difference in expression between the two phenotyes. Note that positive values of this estimate (tstat, logFC, etc) must correspond to higher gene expression in the phenotype one would like to reverse}
-
-\item{pvals}{P values from a t-test assessing the diferential expression of the genes between the two phenotypes}
+\item{geneEsts}{a numeric vector containing estimates or directions (+1 -> up or -1 -> down) for the difference in expression between the two phenotyes. Note that positive values of this estimate (+1, or tstat, logFC, etc) must correspond to higher gene expression in the phenotype one would like to reverse}
 
 \item{drugPert}{a drug perturbation signature (object of class PharmacoSig) with rownames that correspond to the ensemble IDs of the genes}
 
 \item{pharmSet}{the PharmacoSet used to generate the drug perturbation signature. Supplying this will add additonal info about the drugs in the ranking tables.}
 
-\item{drugScoreMeth}{a string specifying which drug repurposing technique to use to score the drugs during each trial. The options for this parameter are currently "gwc", "fgsea", and "xsum". Default is "gwc"}
+\item{pvals}{P values from a t-test assessing the diferential expression of the genes between the two phenotypes. If not provided (i.e direction information only for geneEsts) then volcano plots for the data will not be generated and repeat gene IDs will be removed arbitrarily (first ID kept) as opposed to by p value}
 
-\item{pCut}{a boolean specifying whether to use pvalues to remove insignificant genes from the CMAP analysis (TRUE) or to remove genes from the CMAP analysis according to their supplied gene estimates (FALSE)}
+\item{drugScoreMeth}{a string specifying which drug repurposing technique to use to score the drugs during each trial. The options for this parameter are currently "gwc", "gwcCmapBox", "fgsea", and "xsum". Default is "gwcCmapBox"}
 
-\item{cutOff}{if pCut is TRUE then this value represents the p value threshold used to filter out genes. If pCut is FALSE then this value represents the fraction of genes present in both the data and drug perturbation signature with the top absolute value of gene estimates that will be left in the analysis. cutOff should be between 0 and 1.}
+\item{pCut}{a boolean specifying whether to use pvalues to remove insignificant genes from the CMAP analysis (TRUE) or to remove genes from the CMAP analysis according to their supplied gene estimates (FALSE). Initially TRUE, but Defaults to FALSE if no p-values are supplied}
 
-\item{genesToStart}{a value between 0 and 1 representing the fraction of significant genes present in the data and drug perturbation signature to use in the first iteration of the CMAP analysis. Recommended to be at least 0.15 to avoid large changes during the early iterations due to having too few genes present.}
+\item{cutOff}{if pCut is TRUE then this value represents the p value threshold used to filter out genes. If pCut is FALSE then this value represents the fraction of genes present in both the data and drug perturbation signature with the top absolute value of gene estimates that will be left in the analysis. cutOff should be between 0 and 1. If p values ar enot provided, all genes supplied will be used in the analysis}
+
+\item{genesToStart}{a value between 0 and 1 representing the fraction of genes present in the data and drug perturbation signature to use in the first iteration of the CMAP analysis. Recommended to be at least 0.40 to avoid large changes during the early iterations due to having too few genes present.}
 
 \item{numbIters}{The number of iterations that will occur in the analysis. numbIters will set the rate at which genes are added to the analysis.}
 
 \item{gwcMethod}{a character string specifying which method to use when computing correlations in the gwc function. The options are spearman (default) or pearson.}
 
-\item{numbPerms}{The number of permutations to be used to compute the p value in the gwc function.}
+\item{numbPerms}{The number of permutations to be used to compute the p value in the drug repurposing functions.}
 
-\item{volcPlotEsts}{a numeric vector containing gene estimates to be used for volcano plots, if not provided geneEsts will be used. However, if one desires to use t-stats for geneEsts in the gwc analysis it is recommended that one use another estimate (eg logFC) if volcano plots are desired due to the high correlation between t-stats and p values.}
+\item{volcPlotEsts}{a numeric vector containing gene estimates to be used for volcano plots, if not provided geneEsts will be used. If one desires to use t-stats for geneEsts in the gwc analysis it is recommended that one supply the logFC of the genes here if volcano plots are desired.}
 
-\item{drugEst}{a boolean specifying whether to use the estimates for each gene of the drug perturbation signature in the gwc calculation (TRUE) or to use the t-stats for each gene in the drug perturbation signatur ein the gwc calculation (FALSE). Default is TRUE}
+\item{drugEst}{a boolean specifying whether to use the estimates for each gene of the drug perturbation signature in the calculations (TRUE) or to use the t-stats for each gene in the drug perturbation signatur ein the calculations (FALSE). Default is TRUE}
 
-\item{inspectResults}{a boolean specifying whether to display plots that will allow one to check that the correct drugs have been selected base don the data supplied. Default is TURE (show plots)}
+\item{inspectResults}{a boolean specifying whether to display plots that will allow one to check that the correct drugs have been selected based on the data supplied. Default is TRUE (show plots)}
 
 \item{showMimic}{a boolean (default is FALSE) specifying whether to show plots for the drug that upregulates and down regulates the genes that are overexpressed and under expressed in the disease state.}
 
@@ -51,21 +52,27 @@ rankDrugsGwc(geneIds, geneEsts, pvals, drugPert = NULL, pharmSet = NULL,
 \item{extraCut}{a numeric vector, with the nth value corresponding to the nth column of the m by n data.frame supplied in extraData, where each value indicates the value that needs to be reached for the columns of the data fram in order for the ids with that value to be kept or removed. Whether removal occurs when a value is greater or less than the value in this vector is specified in the extraDirec variable.}
 
 \item{extraDirec}{a boolean vector, where TRUE means that ids whose value is greater than that specified in extraVals will be removed and FALSE means those with a value less than conditionVals will be removed.}
+
+\item{drugNameVec}{a character vector specifying the names of the drugs to run through the pipeline. Useful for saving time by running a higher nperm analysis to get more reliable p values on the top drugs identified in a smaller nperm analysis with all the drugs. Default is NULL and all drugs are tested.}
 }
 \value{
 a data frame with information about the drugs in the analysis, including the drugs final scores. There are multiple connectivity scores, p values, and fdr adjusted p values in the results table as each value corresponds to one iteration in the analysis.
 }
 \description{
-This function ranks a list of drugs according to their ability to reverse a phenotype. This is done by first computing scores for the drugs according to one of the various drug repurposing techniques over multiple trials, where each trial 
-contains a different number of statistically significant differentially expressed genes between the disease and normal phenotype. At each trial, the drugs are ranked relative to one another in terms of their ability to reverse the disease phenotype. Additionally, 
+This function ranks a list of drugs according to their ability to reverse a phenotype. This is done by first computing scores for the drugs according to one of the various drug repurposing techniques over multiple trials, where each trial
+contains a different number of differentially expressed genes between the disease and normal phenotype. At each trial, the drugs are ranked relative to one another in terms of their ability to reverse the disease phenotype. Additionally,
 drugs are ranked according to how stable they are from trial to trial (as one varies the number of genes). A final score is given to each drug and is determined according to a drugs rank throughout each trial and its change in rank from trial to trial. For N drugs,
 a final score of -N would imply the drug was the best at reversing the disease phenotype every single trial and that the drugs rank changed the least from one trial to the next, thus meaning it is both the best drug at reversing the disease phenotype and the most stable drug candidate.
 }
 \examples{
 data("geneDataGwc")
 data("drugPertEx")
+
 data("psetSub")
-drugResults = rankDrugsGwc(geneIds = geneDataGwc$ensembl_id, geneEsts = geneDataGwc$t, pvals = geneDataGwc$P.Value, drugPert = drugPertEx, pharmSet = psetSub, drugScoreMeth = "gwc", volcPlotEsts = geneDataGwc$logFC)
+#use below command to use all of the CMAP drugs in your analysis
+#library(PharmacoGx)
+#drugPertEx = downloadPSet("CMAP")
+drugResults = rankDrugsGwc(geneIds = geneDataGwc$symbol, geneEsts = geneDataGwc$t, pvals = geneDataGwc$P.Value, drugPert = drugPertEx, pharmSet = psetSub, drugScoreMeth = "gwc", volcPlotEsts = geneDataGwc$logFC)
 #below line shows how to additionally filter genes based on logFC
 #drugResults = rankDrugsGwc(geneIds = geneDataGwc$ensembl_id, geneEsts = geneDataGwc$t, pvals = geneDataGwc$P.Value, drugPert = drugPertEx, pharmSet = psetSub, volcPlotEsts = geneDataGwc$logFC, extraData = cbind(abs(geneDataGwc$logFC)), extraCut = c(0.5), extraDirec = c(TRUE))
 }

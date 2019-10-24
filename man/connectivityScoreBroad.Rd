@@ -4,8 +4,9 @@
 \alias{connectivityScoreBroad}
 \title{Function computing connectivity scores between two signatures}
 \usage{
-connectivityScoreBroad(x, y, method = c("fgsea", "gwc", "xsum"),
-  nperm = 10000, nthread = 1, gwc.method = c("spearman", "pearson"), ...)
+connectivityScoreBroad(x, y, method = c("fgsea", "gwc", "xsum",
+  "gwcCmapBox"), nperm = 10000, nthread = 1,
+  gwc.method = c("spearman", "pearson"), ...)
 }
 \arguments{
 \item{x}{A \code{matrix} with the first gene signature. column one being the values for the genes
@@ -33,7 +34,7 @@ statistic?}
 }
 \description{
 A function for finding the connectivity between two signatures, using either
-the GSEA method based on the KS statistic, or the gwc method based on a 
+the GSEA method based on the KS statistic, or the gwc method based on a
 weighted spearman statistic. The GSEA analysis is implemented in the piano package.
 }
 \examples{
@@ -57,6 +58,6 @@ Varemo, L., Nielsen, J. and Nookaew, I. (2013) Enriching the gene set
    expression and combining statistical hypotheses and methods. Nucleic
    Acids Research. 41 (8), 4378-4391. doi: 10.1093/nar/gkt111
 
-Cheng, Jie, et al. "Systematic evaluation of connectivity map for disease 
+Cheng, Jie, et al. "Systematic evaluation of connectivity map for disease
    indications." Genome medicine 6.12 (2014): 95.
 }

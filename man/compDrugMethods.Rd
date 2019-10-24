@@ -4,11 +4,11 @@
 \alias{compDrugMethods}
 \title{Function to compare drug repurposing techniques.}
 \usage{
-compDrugMethods(numAnalyses, geneIds, geneEsts, pvals, drugPert, pharmSet,
+compDrugMethods(numAnalyses, geneIds, geneEsts, drugPert, pharmSet, pvals,
   drugScoreMeth, pCut = TRUE, cutOff = 0.05, genesToStart = 0.2,
   numbIters = 10, gwcMethod = "spearman", numbPerms = 1000,
-  volcPlotEsts = NULL, drugEst = TRUE, extraData = NA, extraCut = NA,
-  extraDirec = NA)
+  volcPlotEsts = NULL, drugEst = TRUE, extraData = NA,
+  extraCut = NA, extraDirec = NA, drugNameVec = NULL)
 }
 \arguments{
 \item{numAnalyses}{an integer specifying how many analyses are intended/the max size of one of the lists passed to the function. Note that not providing}
@@ -17,11 +17,11 @@ compDrugMethods(numAnalyses, geneIds, geneEsts, pvals, drugPert, pharmSet,
 
 \item{geneEsts}{a list of numeric vectors containing estimates for the difference in expression between the two phenotyes in each analysis. Note that positive values of this estimate (tstat, logFC, etc) must correspond to higher gene expression in the phenotype one would like to reverse}
 
-\item{pvals}{a list of numeric vectors containing P values from a t-test assessing the diferential expression of the genes between the two phenotypes in each analysis}
-
 \item{drugPert}{a drug perturbation signature (object of class PharmacoSig) with rownames that correspond to the ensemble IDs of the genes}
 
 \item{pharmSet}{the PharmacoSet used to generate the drug perturbation signature. Supplying this will add additonal info about the drugs in the ranking tables.}
+
+\item{pvals}{a list of numeric vectors containing P values from a t-test assessing the diferential expression of the genes between the two phenotypes in each analysis}
 
 \item{drugScoreMeth}{a list of strings specifying which drug repurposing technique to use to score the drugs during each trial in an analysis. The options for this parameter are currently "gwc" and "fgsea". Default is "gwc"}
 
@@ -46,23 +46,25 @@ compDrugMethods(numAnalyses, geneIds, geneEsts, pvals, drugPert, pharmSet,
 \item{extraCut}{a list of numeric vectors, with the nth value corresponding to the nth column of the m by n data.frame supplied in extraData, where each value indicates the value that needs to be reached for the columns of the data fram in order for the ids with that value to be kept or removed. Whether removal occurs when a value is greater or less than the value in this vector is specified in the extraDirec variable.}
 
 \item{extraDirec}{a list of boolean vectors, where TRUE means that ids whose value is greater than that specified in extraVals will be removed and FALSE means those with a value less than conditionVals will be removed.}
+
+\item{drugNameVec}{a character vector specifying the names of the drugs to run through the pipeline. Useful for saving time by running a higher nperm analysis to get more reliable p values on the top drugs identified in a smaller nperm analysis with all the drugs. Default is NULL and all drugs are tested.}
 }
 \value{
 a data frame with information about the drugs in each analysis, including the drugs final scores and the drugs average final scores across the different methods.
 }
 \description{
 This function operates like the rankDrugsGwc function but allows users to compare multiple drug repurposing methods. Users can either compare different methods,
-the results of using the same method with different parameters, or can run the packges main function on different data sets. This is accomplished by passing in 
+the results of using the same method with different parameters, or can run the packges main function on different data sets. This is accomplished by passing in
 lists instead of vectors or values, where the n'th list element is used in the n'th analysis. Note that if one is interested in keeping the variables the same but trying different methods,
 only the drugScoreMeth variable would be in list format. If some variables are lists and other are not or are shorter lists, the supplied variable or last list element
-will be used in the analyses containing the longer lists variables. A data frame is returned that contains the ranks of the drugs in each method 
+will be used in the analyses containing the longer lists variables. A data frame is returned that contains the ranks of the drugs in each method
 and the average rank of the drug across mutliple methods.
 }
 \examples{
 data("geneDataGwc")
 data("drugPertEx")
 data("psetSub")
-#compare a gwc, fgsea, and xsum, analysis that have the same parameters and also a gwc analysis with different parameters
-compareResults = compDrugMethods(4, geneIds = geneDataGwc$ensembl_id, geneEsts = geneDataGwc$t, pvals = geneDataGwc$P.Value, drugPert = drugPertEx, pharmSet = psetSub, drugScoreMeth = list("gwc", "fgsea","xsum", "gwc"), pCut = list(TRUE, TRUE, TRUE, FALSE), cutOff = list(0.05, 0.05, 0.05, 0.10), genesToStart = list(0.20, 0.20, 0.20, 0.10), numbIters = 5, gwcMethod = "spearman", numbPerms = 1000, volcPlotEsts = NULL, drugEst = TRUE, extraData = NA, extraCut = NA, extraDirec = NA)
+#compare a gwcCmapBox, fgsea, and xsum, analysis that have the same parameters and also a gwcCmapBox analysis with different parameters
+compareResults = compDrugMethods(4, geneIds = geneDataGwc$symbol, geneEsts = geneDataGwc$t, drugPert = drugPertEx, pharmSet = psetSub, pvals = geneDataGwc$P.Value, drugScoreMeth = list("gwcCmapBox", "fgsea","xsum", "gwcCmapBox"), pCut = list(TRUE, TRUE, TRUE, FALSE), cutOff = list(0.05, 0.05, 0.05, 0.10), genesToStart = list(0.20, 0.20, 0.20, 0.10), numbIters = 5, gwcMethod = "spearman", numbPerms = 1000, volcPlotEsts = NULL, drugEst = TRUE, extraData = NA, extraCut = NA, extraDirec = NA, drugNameVec = NULL)
 }
 \keyword{gwcCMap}

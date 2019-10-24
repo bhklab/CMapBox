@@ -24,7 +24,7 @@ to use when benchmarking
 }
 \examples{
 searchWords = c("solid tumor", "depressive")
-drugNames = getBenchmarkDrugNames(searchWords)
+drugTrialFrame = getBenchmarkDrugs(searchWords)
 #below line will show other studies the drugs have been involved in, studies that did not contain the search words
-clinicalInfoFrame = getDrugClinicalInfo(drugNames)
+clinicalInfoFrame = getDrugClinicalInfo(drugTrialFrame$drug_name)
 }

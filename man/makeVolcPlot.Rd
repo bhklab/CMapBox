@@ -4,9 +4,12 @@
 \alias{makeVolcPlot}
 \title{Function to Create a Volcano Plot}
 \usage{
-makeVolcPlot(genesEst, genesSymb, genesP, genesId = NULL, idsOfInt = NULL)
+makeVolcPlot(genesEst, genesSymb, genesP, genesId = NULL,
+  idsOfInt = NULL, makePlot = TRUE, topGenes = 5)
 }
 \arguments{
+\item{genesEst}{a numeric vector with the estimates (typically LogFC) for the genes}
+
 \item{genesSymb}{a character vector with the gene symbols for the gene estimates provided}
 
 \item{genesP}{a numeric vector with the p values for the gene estimates provided}
@@ -15,18 +18,23 @@ makeVolcPlot(genesEst, genesSymb, genesP, genesId = NULL, idsOfInt = NULL)
 
 \item{idsOfInt}{a list of Ids to be kept when making the volcano plots, if not provided all Ids will be used}
 
-\item{geneEst}{a numeric vector with the estimates (typically LogFC) for the genes}
+\item{makePlot}{a boolean that, if TRUE, will create a volcano plot. Default is TRUE}
+
+\item{topGenes}{The number of the most positive and negative genes, accordin to geneEst, to label on the volcano plot and/or return. Default is 5}
+}
+\value{
+a list containing the frame used for the volcano plot, a frame with info for the top positive genes labelled in the volcano plot, and
+a frame with info for the top negative genes labelled in the volcano plot
 }
 \description{
-This function will create a volcano plot that has the top and bottom 5 genes (according to gene estimates) labelled
+This function will create a volcano plot that has the top and bottom 5 genes (according to gene estimates) labelled. Alternatively,
+users can turn off the plotting option in which case just the info used to make the plot will be returned.
 }
 \examples{
-add example with CMAP here
+#add example with CMAP here
 data("geneDataGwc")
-geneDataClean = cleanData(geneIds = geneDataGwc$ensembl_id, geneEsts = geneDataGwc$logFC, pvals = geneDataGwc$P.Value, forRankAndPlot = TRUE)
-makeVolcPlot(genesEst = geneDataClean$geneEsts, genesSymb = geneDataClean$symbol, genesP = geneDataClean$pvals)
-##only use genes that are present in the pharmacoSet
-makeVolcPlot(genesEst = geneDataClean$geneEsts, genesSymb = geneDataClean$symbol, genesP = geneDataClean$pvals, genesId = geneDataClean$ensemble, idsOfInt = rownames(drugPertEx))
+geneDataClean = mapGenes(geneIds = geneDataGwc$symbol, geneEsts = geneDataGwc$logFC, pvals = geneDataGwc$P.Value, forRankAndPlot = TRUE)
+volcPlotData = makeVolcPlot(genesEst = geneDataClean$geneEsts, genesSymb = geneDataClean$symbol, genesP = geneDataClean$pvals)
 
 }
 \keyword{gwcCMap}
