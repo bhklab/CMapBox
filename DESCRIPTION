@@ -1,18 +1,20 @@
-Package: CMapBox
+Package: gwcCMapCur
 Title: What the Package Does (one line, title case)
-Version: 0.0.0.9000
-Authors@R: person("First", "Last", email = "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
-Depends:
-    R (>= 3.3.2)
-License: What license is it under?
+Version: 1.0.0
+Author: Michael Zon
+Maintainer: Michael Zon <michaelzon7@gmail.com>
+Description: Drug repurposing package to identify previously approved drugs to combat a disease.
+Depends: PharmacoGx, R (>= 3.6.0)
+License: Artistic-2.0
 Encoding: UTF-8
+biocViews: GeneExpression, Pharmacogenetics, Pharmacogenomics, Software, Classification
 Imports:
     Biobase,
-    PharmacoGx,
     org.Hs.eg.db,
-    GSA,
     piano,
     parallel,
-    fgsea
-RoxygenNote: 6.0.1
+    lattice,
+    calibrate,
+    AnnotationDbi,
+    stats
+RoxygenNote: 6.1.1
