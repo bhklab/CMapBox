@@ -1,0 +1,14 @@
+%\VignetteIndexEntry{CMapBox: an R package for drug repurposing}
+%\VignetteDepends{}
+%\VignetteSuggests{}
+%\VignetteKeywords{}
+%\VignettePackage{CMapBox}
+
+\documentclass{article}
+
+\begin{document}
+
+plot(1,1)
+
+
+\end{document}
