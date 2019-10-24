@@ -1,6 +1,6 @@
 #' Function to determine which genes drove a drugs connectivity score and create volcano plots that shows which genes drove a drugs connectivity score
 #'
-#' This function displays volcano plots for the data and drug supplied with the top 5 and bottom 5 genes that drove the connectivity score labelled. Top 5 and bottom 5 here refer to genes that had positive and negative gene estimates in the data, respectively, and drove the connectivity score the most.
+#' This function displays volcano plots for the data and drug supplied with the top N and bottom N genes that drove the connectivity score labelled. Top N and bottom N here refer to genes that had positive and negative gene estimates in the data, respectively, and drove the connectivity score the most.
 #' Note that which genes drive the connectivity score can vary with the method used to calculate the score. However, in general these genes are the top positive and negative genes that the drug lowered and raised the expression of, respectively.
 #' @param genesEst a numeric vector with the estimates (typically LogFC) for the genes
 #' @param genesSymb a character vector with the gene symbols for the gene estimates provided
@@ -12,6 +12,7 @@
 #' @param gwcMethod a character string specifying which method was used when computing correlations in the gwc function. The options are spearman or pearson.
 #' @param droveNegScore a boolean specifying whether the plots should label the genes that drove the negative connectivity score (reversed the phenotype) between the drug and the data. If FALSE, the genes that drove the positive connectivity score will be labelled.
 #' @param drugEst a boolean specifying whether the estimates for each gene of the drug perturbation signature were used in the gwc calculation (TRUE) or if the t-stats for each gene in the drug perturbation signature were used in the gwc calculation (FALSE).
+#' @param numbTopGenes number of top positive and negative genes to return information for and include in the plots
 #' @param makePlot a boolean specifying whether or not to display the plots showing the genes that the drug interacts with to drive the score. Default is TRUE
 #' @param drugVolcPlot a boolean (default is FALSE) specifying whether to generate a volcano plot for the top and bottom 5 genes (by estimate) in the drug that were present in the data supplied. Note that if TRUE the other plots are not generated.
 #' @param supressPlot a boolean specifying whether to generate volcano plots that illustrate the genes driving the connectivity score. TRUE by default
@@ -21,18 +22,16 @@
 #' @keywords gwcCMap
 #' @export
 #' @examples
-#'
 #' data("geneDataGwc")
 #' data("drugPertEx")
-#'
 #' geneDataClean = mapGenes(geneIds = geneDataGwc$symbol, geneEsts = geneDataGwc$logFC, pvals = geneDataGwc$P.Value, forRankAndPlot = TRUE)
-#' drugGeneInfo = getSigGeneVolcPlot(genesEst = geneDataClean$geneEsts, genesSymb = geneDataClean$symbol, genesP = geneDataClean$pvals, genesId = geneDataClean$ensemble, drugPert = drugPertEx, drugName = "BRD-K78431006", drugScoreMeth = "gwcCmapBox", gwcMethod = "pearson", droveNegScore = TRUE, drugEst = TRUE, drugVolcPlot = FALSE, supressPlot = FALSE)
+#' drugGeneInfo = plotDrugGeneInteraction(genesEst = geneDataClean$geneEsts, genesSymb = geneDataClean$symbol, genesP = geneDataClean$pvals, genesId = geneDataClean$ensemble, drugPert = drugPertEx, drugName = "BRD-K78431006", drugScoreMeth = "gwcCmapBox", gwcMethod = "pearson", droveNegScore = TRUE, drugEst = TRUE, drugVolcPlot = FALSE, supressPlot = FALSE)
 #'
 
-getSigGeneVolcPlot = function(genesEst, genesSymb, genesP, genesId, drugPert, drugName, drugScoreMeth, gwcMethod, droveNegScore, drugEst, makePlot = TRUE, drugVolcPlot = FALSE, supressPlot = TRUE)
+plotDrugGeneInteraction = function(genesEst, genesSymb, genesP, genesId, drugPert, drugName, drugScoreMeth, gwcMethod, droveNegScore, drugEst, numbTopGenes = 5, makePlot = TRUE, drugVolcPlot = FALSE, supressPlot = TRUE)
 {
- #  driveGenesNegScore = getSigGeneVolcPlot(genesEst, genesSymb, genesP, genesId, drugPert, topDrugName, gwcMethod, droveNegScore = TRUE, drugEst, drugVolcPlot = FALSE)
-
+  #  driveGenesNegScore = getSigGeneVolcPlot(genesEst, genesSymb, genesP, genesId, drugPert, topDrugName, gwcMethod, droveNegScore = TRUE, drugEst, drugVolcPlot = FALSE)
+  #numbTopGenes = 5
   #genesSymb = geneDataDf$symbol
   #genesP = geneDataDf$pvals
   #genesEst = volcPlotEsts
@@ -130,14 +129,14 @@ getSigGeneVolcPlot = function(genesEst, genesSymb, genesP, genesId, drugPert, dr
     #SPEAR sigGenesPos = w*rank(volcFrame$tstat)*rank(-topDrugDat$tstat)
     # SPEAR names(sigGenesPos) = volcFrame$geneSymb
 
-    topNeg = names(sort(sigGenesNeg, index.return = TRUE, decreasing = direc)$x)[1:5]
+    topNeg = names(sort(sigGenesNeg, index.return = TRUE, decreasing = direc)$x)[1:numbTopGenes]
     topNegInds = c()
     for(i in 1:length(topNeg))
       topNegInds = c(topNegInds, which(volcFrame$geneSymb == topNeg[i]))
     negSubsetDat = volcFrame[topNegInds, ]
     negSubsetDrug = drugDat[topNegInds, ]
 
-    topPos = names(sort(sigGenesPos, index.return = TRUE, decreasing = direc)$x)[1:5]
+    topPos = names(sort(sigGenesPos, index.return = TRUE, decreasing = direc)$x)[1:numbTopGenes]
     topPosInds = c()
     for(i in 1:length(topPos))
       topPosInds = c(topPosInds, which(volcFrame$geneSymb == topPos[i]))
@@ -182,14 +181,14 @@ getSigGeneVolcPlot = function(genesEst, genesSymb, genesP, genesId, drugPert, dr
     if(length(downInDisInter) > 0)
       downX = topAndBotCompound[downInDisInter]
 
-    topNeg = names(sort(sign*upX)[1:5])
+    topNeg = names(sort(sign*upX)[1:numbTopGenes])
     topNegInds = c()
     for(i in 1:length(topNeg))
       topNegInds = c(topNegInds, which(volcFrame$geneSymb == topNeg[i]))
     negSubsetDat = volcFrame[topNegInds, ]
     negSubsetDrug = drugDat[topNegInds, ]
 
-    topPos = names(sort(sign*downX, decreasing = TRUE)[1:5])
+    topPos = names(sort(sign*downX, decreasing = TRUE)[1:numbTopGenes])
     topPosInds = c()
     for(i in 1:length(topPos))
       topPosInds = c(topPosInds, which(volcFrame$geneSymb == topPos[i]))
@@ -203,9 +202,9 @@ getSigGeneVolcPlot = function(genesEst, genesSymb, genesP, genesId, drugPert, dr
   if(drugVolcPlot == TRUE)
   {
     mostPosInds = sort(drugDat[,"estimate"], index.return = TRUE, decreasing = TRUE)$ix
-    posSubset = drugDat[mostPosInds[1:5], ]
+    posSubset = drugDat[mostPosInds[1:numbTopGenes], ]
     mostNegInds = sort(drugDat[,"estimate"], index.return = TRUE)$ix
-    negSubset = drugDat[mostNegInds[1:5], ]
+    negSubset = drugDat[mostNegInds[1:numbTopGenes], ]
 
     with(drugDat, plot(estimate, -log10(pvalue), pch=20, main=paste("Drug (",drugName, ") Volcano Plot"), xlim=c(1.4*min(drugDat$estimate), 1.4*max(drugDat$estimate)), font.axis = 2, cex.lab = 1.3, cex.axis = 1.15))
     with(negSubset, points(estimate, -log10(pvalue), pch=20, col="blue", cex = 2))
@@ -227,7 +226,7 @@ getSigGeneVolcPlot = function(genesEst, genesSymb, genesP, genesId, drugPert, dr
       legend(bty = "n", 0.8*max(volcFrame$geneEst), 0.97*max(-log10(volcFrame$pvalue)), legend=c("Low in Disease", "High in Disease"), col=c("blue", "red"), pch = 19, cex=1.1, pt.cex = 1.3, x.intersp = .75)
       #dev.off()
     }else{
-      mostInfluentialGenes = c(1:5)
+      mostInfluentialGenes = c(1:numbTopGenes)
       colnames(negSubsetDat)[2] = c("gene direction in signature")
       colnames(posSubsetDat)[2] = c("gene direction in signature")
       with(negSubsetDat, plot(`gene direction in signature`, mostInfluentialGenes, pch=20, main=paste("Plot for the Data with the genes that drove the", direcString, "connectivity score between drug", drugName, "and the data labelled" ), xlim=c(1.2*min(volcFrame$geneEst), 1.2*max(volcFrame$geneEst)), font.axis = 2, cex.lab = 1.3, cex.axis = 1.15))
